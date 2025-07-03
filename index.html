@@ -2,38 +2,19 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Promedio Técnicos</title>
+  <title>Listado de Técnicos y Puntuaciones</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      background-color: #f2f2f2;
-    }
-    caption {
-      font-size: 1.5em;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; max-width: 600px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #f2f2f2; }
+    caption { font-size: 1.5em; margin-bottom: 10px; }
   </style>
 </head>
 <body>
-  <h1>Promedio por Técnico</h1>
-  <div id="error" style="color: red;"></div>
-  <table id="tabla-tecnicos">
-    <caption>Listado de Técnicos</caption>
+  <h1>Listado de Técnicos y Puntuaciones</h1>
+  <table id="tablaTecnicos">
+    <caption>Técnicos con promedio de servicio y cliente</caption>
     <thead>
       <tr>
         <th>ID Técnico</th>
@@ -41,34 +22,49 @@
         <th>Promedio Cliente</th>
       </tr>
     </thead>
-    <tbody></tbody>
+    <tbody>
+      <tr><td colspan="3">Cargando datos...</td></tr>
+    </tbody>
   </table>
 
   <script>
-    const url = "https://prod-146.westeurope.logic.azure.com:443/workflows/9bd25d3532a84155b7433026f082943c/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=92iipqcnXU-IQzOJZ0d22tZql0VHJDg0BxxTfOXHpI8";
+    const urlLogicApp = 'https://prod-146.westeurope.logic.azure.com:443/workflows/9bd25d3532a84155b7433026f082943c/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=92iipqcnXU-IQzOJZ0d22tZql0VHJDg0BxxTfOXHpI8';
 
-    fetch(url)
-      .then(res => {
-        if (!res.ok) throw new Error("Error al cargar los datos.");
-        return res.json();
-      })
-      .then(data => {
-        const rows = data.ResultSets?.Table1 || [];
-        const tbody = document.querySelector("#tabla-tecnicos tbody");
+    async function cargarDatos() {
+      const tbody = document.querySelector('#tablaTecnicos tbody');
+      tbody.innerHTML = '<tr><td colspan="3">Cargando datos...</td></tr>';
 
-        rows.forEach(tecnico => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${tecnico.id_tecnico}</td>
-            <td>${tecnico.promedio_servicio}</td>
-            <td>${tecnico.promedio_cliente}</td>
-          `;
-          tbody.appendChild(row);
-        });
-      })
-      .catch(error => {
-        document.getElementById("error").textContent = error.message;
-      });
+      try {
+        const response = await fetch(urlLogicApp);
+        if (!response.ok) throw new Error('Error en la petición: ' + response.status);
+
+        const data = await response.json();
+
+        // Extraer el arreglo que contiene los técnicos
+        const tecnicos = data.ResultSets?.Table1 || [];
+
+        if (tecnicos.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3">No hay datos para mostrar.</td></tr>';
+          return;
+        }
+
+        // Construir filas de la tabla
+        const filas = tecnicos.map(t => `
+          <tr>
+            <td>${t.id_tecnico}</td>
+            <td>${Number(t.promedio_servicio).toFixed(2)}</td>
+            <td>${Number(t.promedio_cliente).toFixed(2)}</td>
+          </tr>
+        `).join('');
+
+        tbody.innerHTML = filas;
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="3">Error al cargar los datos: ${error.message}</td></tr>`;
+      }
+    }
+
+    // Cargar datos al iniciar la página
+    cargarDatos();
   </script>
 </body>
 </html>
