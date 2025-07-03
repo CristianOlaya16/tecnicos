@@ -3,36 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Promedios por Técnico</title>
+  <title>Promedio Técnicos</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      background-color: #f4f4f4;
-    }
-    h1 {
-      text-align: center;
     }
     table {
-      width: 80%;
-      margin: 0 auto;
       border-collapse: collapse;
-      background: white;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 100%;
+      margin-top: 20px;
     }
     th, td {
-      padding: 12px;
-      border: 1px solid #ddd;
+      border: 1px solid #ccc;
+      padding: 8px;
       text-align: center;
     }
     th {
-      background-color: #f0f0f0;
+      background-color: #f2f2f2;
+    }
+    caption {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Promedios por Técnico</h1>
-  <table>
+  <h1>Promedio por Técnico</h1>
+  <div id="error" style="color: red;"></div>
+  <table id="tabla-tecnicos">
+    <caption>Listado de Técnicos</caption>
     <thead>
       <tr>
         <th>ID Técnico</th>
@@ -40,35 +41,33 @@
         <th>Promedio Cliente</th>
       </tr>
     </thead>
-    <tbody id="tablaTecnicos">
-      <tr><td colspan="3">Cargando datos...</td></tr>
-    </tbody>
+    <tbody></tbody>
   </table>
 
   <script>
-    const LOGIC_APP_URL = "https://prod-146.westeurope.logic.azure.com:443/workflows/9bd25d3532a84155b7433026f082943c/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=92iipqcnXU-IQzOJZ0d22tZql0VHJDg0BxxTfOXHpI8";
+    const url = "https://prod-146.westeurope.logic.azure.com:443/workflows/9bd25d3532a84155b7433026f082943c/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=92iipqcnXU-IQzOJZ0d22tZql0VHJDg0BxxTfOXHpI8";
 
-    fetch(LOGIC_APP_URL)
-      .then(res => res.json())
+    fetch(url)
+      .then(res => {
+        if (!res.ok) throw new Error("Error al cargar los datos.");
+        return res.json();
+      })
       .then(data => {
-        const tbody = document.getElementById("tablaTecnicos");
-        tbody.innerHTML = "";
+        const rows = data.ResultSets?.Table1 || [];
+        const tbody = document.querySelector("#tabla-tecnicos tbody");
 
-        data.forEach(tecnico => {
+        rows.forEach(tecnico => {
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>${tecnico.id_tecnico}</td>
-            <td>${parseFloat(tecnico.promedio_servicio).toFixed(2)}</td>
-            <td>${parseFloat(tecnico.promedio_cliente).toFixed(2)}</td>
+            <td>${tecnico.promedio_servicio}</td>
+            <td>${tecnico.promedio_cliente}</td>
           `;
           tbody.appendChild(row);
         });
       })
-      .catch(err => {
-        console.error("Error al obtener datos:", err);
-        document.getElementById("tablaTecnicos").innerHTML = `
-          <tr><td colspan="3">Error al cargar los datos</td></tr>
-        `;
+      .catch(error => {
+        document.getElementById("error").textContent = error.message;
       });
   </script>
 </body>
