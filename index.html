@@ -49,6 +49,7 @@
     th, td {
       padding: 12px 20px;
       text-align: center;
+      font-size: 1rem;
     }
 
     tbody tr {
@@ -87,6 +88,13 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+
+    .stars {
+      color: #facc15; /* amarillo dorado */
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
@@ -113,6 +121,17 @@
 
   <script>
     const urlLogicApp = 'https://prod-146.westeurope.logic.azure.com:443/workflows/9bd25d3532a84155b7433026f082943c/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=92iipqcnXU-IQzOJZ0d22tZql0VHJDg0BxxTfOXHpI8';
+
+    function mostrarEstrellas(valor) {
+      const maxEstrellas = 5;
+      const entero = Math.round(valor);
+      let estrellas = '';
+
+      for(let i = 1; i <= maxEstrellas; i++) {
+        estrellas += i <= entero ? '⭐' : '☆';
+      }
+      return `<span class="stars" aria-label="${valor.toFixed(2)} estrellas">${estrellas}</span>`;
+    }
 
     async function cargarDatos() {
       const tbody = document.querySelector('#tablaTecnicos tbody');
@@ -146,8 +165,8 @@
         const filas = tecnicos.map(t => `
           <tr>
             <td>${t.id_tecnico}</td>
-            <td>${Number(t.promedio_servicio).toFixed(2)}</td>
-            <td>${Number(t.promedio_cliente).toFixed(2)}</td>
+            <td>${mostrarEstrellas(t.promedio_servicio)}</td>
+            <td>${mostrarEstrellas(t.promedio_cliente)}</td>
           </tr>
         `).join('');
 
